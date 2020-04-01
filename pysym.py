@@ -43,10 +43,18 @@ if len(sys.argv) > 1: # look for arguments like create, delete, etc
                     write = sys.argv[3]
                 else:
                     write = pwd+"/"+sys.argv[3]
-                os.system("echo "+write+" | head -n 1 >> ~/.config/pysyms/"+sys.argv[2]+".pysym")
+                os.system("echo "+write+" >> ~/.config/pysyms/"+sys.argv[2]+".pysym")
+                if sys.argv[2].startswith("/"): # make the link register the full path
+                    write2 = sys.argv[2]
+                else:
+                    write2 = pwd+"/"+sys.argv[2]
+                os.system("echo "+write2+" >> ~/.config/pysyms/"+sys.argv[2]+".pysym")
+
                 print("created file "+sys.argv[2])
                 create()
         else:
             create()
     elif sys.argv[1] == "view":
             pass
+
+# TODO - add delete option
