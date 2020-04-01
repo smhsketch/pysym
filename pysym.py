@@ -9,10 +9,10 @@ import sys
 
 user = os.environ["USER"]
 pwd = os.environ["PWD"]
-version = "0.0.5"
+version = "0.0.6"
 
 try:
-    symfile = open("/home/"+user+"/.config/pysyms/pysym.version", "r") # python does not understand ~
+    symfile = open("/home/"+user+"/.config/pysyms/pysym.version", "r") # check if the pysyms folder exists 
     symfile.readlines()
     symfile.close()
 
@@ -22,8 +22,23 @@ except FileNotFoundError:
     os.system("echo "+version+" >> ~/.config/pysyms/pysym.version")
 
 def create():
-    print("creating symlink...")
+    name = input("name this symlink - this does not affect file names: ")
+    os.system("touch ~/.config/pysyms/"+name+".pysym")
+
+    if sys.argv[3].startswith("/"): # make the link register the full path
+        write = sys.argv[3]
+    else:
+        write = pwd+"/"+sys.argv[3]
+    os.system("echo "+write+" >> ~/.config/pysyms/"+name+".pysym")
+
+    if sys.argv[2].startswith("/"): # make the link register the full path
+        write2 = sys.argv[2]
+    else:
+        write2 = pwd+"/"+sys.argv[2]
+    
+    os.system("echo "+write2+" >> ~/.config/pysyms/"+name+".pysym") # make the log file
     os.system("ln -s "+sys.argv[2]+" "+sys.argv[3])
+    print("Successfully created symlink")
 
 if len(sys.argv) > 1: # look for arguments like create, delete, etc
     if sys.argv[1] == "version":
@@ -33,28 +48,46 @@ if len(sys.argv) > 1: # look for arguments like create, delete, etc
             check = open(sys.argv[2])
             check.close()
         except FileNotFoundError: # if the file doesn't exist, give the option to create it
-            if input("No file found to be symlinked... create one now? ") == "n":
-                print("no symlink made")
+            if input("No base file found to be symlinked... create one now? ") == "n":
+                print("no files created; no symlinks made")
                 exit()
             else:
                 os.system("touch "+sys.argv[2])
-                os.system("touch ~/.config/pysyms/"+sys.argv[2]+".pysym")
-                if sys.argv[3].startswith("/"): # make the link register the full path
-                    write = sys.argv[3]
-                else:
-                    write = pwd+"/"+sys.argv[3]
-                os.system("echo "+write+" >> ~/.config/pysyms/"+sys.argv[2]+".pysym")
-                if sys.argv[2].startswith("/"): # make the link register the full path
-                    write2 = sys.argv[2]
-                else:
-                    write2 = pwd+"/"+sys.argv[2]
-                os.system("echo "+write2+" >> ~/.config/pysyms/"+sys.argv[2]+".pysym")
-
                 print("created file "+sys.argv[2])
-                create()
-        else:
-            create()
-    elif sys.argv[1] == "view":
-            pass
+        create()
 
-# TODO - add delete option
+    elif sys.argv[1] == "view":
+        if sys.argv[2] == "":
+            print("please give a symlink to view")
+            exit()
+        try:
+            symfile = open("/home/"+user+"/.config/pysyms/"+sys.argv[2]+".pysym")
+            info = symfile.readlines()
+            symfile.close()
+            print()
+            print((info[0])[:-1]+" --> "+(info[1]))
+        except FileNotFoundError:
+            print("not found. maybe check the spelling?")
+            exit()
+
+    elif sys.argv[1] == "delete" or sys.argv[1] == "remove":
+        if sys.argv[2] == "":
+            print("please specify a symlink to remove")
+            exit()
+        try:
+            symfile = open("/home/"+user+"/.config/pysyms/"+sys.argv[2]+".pysym")
+            info = symfile.readlines()
+            symfile.close()
+        except FileNotFoundError:
+            print("not found. maybe check the spelling?")
+            exit()
+        
+        delete = input("would you like to remove the base, link, or both?")
+        if delete == "base" or delete == "both":
+            os.remove((info[1])[:-1])
+        if delete == "link" or delete == "both":
+            os.remove((info[0])[:-1])
+        os.remove("/home/"+user+"/.config/pysyms/"+sys.argv[2]+".pysym")
+        print()
+        print("successfully deleted symlink")
+        print()
